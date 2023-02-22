@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 )
 
 type WriteMultipart func(w *multipart.Writer) error
@@ -25,7 +26,7 @@ func MultipartFile(field, filename string, data io.Reader) WriteMultipart {
 	}
 }
 
-func FormFields(fields map[string]string) WriteMultipart {
+func FormFields(fields url.Values) WriteMultipart {
 	return func(w *multipart.Writer) error {
 		defer w.Close()
 
@@ -34,9 +35,12 @@ func FormFields(fields map[string]string) WriteMultipart {
 			if errField != nil {
 				return errField
 			}
-			_, errWrite := io.WriteString(wr, value)
-			if errWrite != nil {
-				return errWrite
+
+			if len(value) > 0 {
+				_, errWrite := io.WriteString(wr, value[0])
+				if errWrite != nil {
+					return errWrite
+				}
 			}
 		}
 

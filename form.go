@@ -9,6 +9,8 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+const encodingURL = "application/x-www-form-urlencoded"
+
 func (client *Client) GetForm(ctx context.Context, addr string, data url.Values) (*http.Response, error) {
 	u, errParse := url.Parse(addr)
 	if errParse != nil {
@@ -25,11 +27,23 @@ func (client *Client) GetForm(ctx context.Context, addr string, data url.Values)
 func (client *Client) PostForm(ctx context.Context, addr string, data url.Values) (*http.Response, error) {
 	body := strings.NewReader(data.Encode())
 
-	return client.Post(ctx, addr, "application/x-www-form-urlencoded", body)
+	return client.Post(ctx, addr, encodingURL, body)
+}
+
+func (client *Client) PutForm(ctx context.Context, addr string, data url.Values) (*http.Response, error) {
+	body := strings.NewReader(data.Encode())
+
+	return client.Put(ctx, addr, encodingURL, body)
+}
+
+func (client *Client) PatchForm(ctx context.Context, addr string, data url.Values) (*http.Response, error) {
+	body := strings.NewReader(data.Encode())
+
+	return client.Patch(ctx, addr, encodingURL, body)
 }
 
 func (client *Client) QueryForm(ctx context.Context, addr string, data url.Values) (*http.Response, error) {
 	body := strings.NewReader(data.Encode())
 
-	return client.Query(ctx, addr, "application/x-www-form-urlencoded", body)
+	return client.Query(ctx, addr, encodingURL, body)
 }
