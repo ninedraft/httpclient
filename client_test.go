@@ -148,19 +148,6 @@ func requireEqual[E comparable](t *testing.T, expected, actual E, msg string, ar
 	}
 }
 
-func asssertErrorIs(t *testing.T, expected, actual error, msg string, args ...any) bool {
-	t.Helper()
-
-	if !errors.Is(actual, expected) {
-		t.Errorf(msg, args...)
-		t.Errorf("expected: %v", expected)
-		t.Errorf("got:      %v", actual)
-
-		return false
-	}
-	return true
-}
-
 type serverAssert struct {
 	isCalled atomic.Bool
 	*httptest.Server
