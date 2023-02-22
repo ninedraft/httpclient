@@ -3,7 +3,6 @@ package httpclient_test
 import (
 	"bytes"
 	"context"
-	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -25,6 +24,9 @@ var methodsBody = map[string]callFn{
 	},
 	http.MethodPut: func(cl *httpclient.Client, ctx context.Context, addr string) (*http.Response, error) {
 		return cl.Put(ctx, addr, "text/plain", bytes.NewBufferString("hello, world"))
+	},
+	httpclient.MethodQuery: func(cl *httpclient.Client, ctx context.Context, addr string) (*http.Response, error) {
+		return cl.Query(ctx, addr, "text/plain", bytes.NewBufferString("hello, world"))
 	},
 }
 

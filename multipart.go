@@ -56,6 +56,10 @@ func (client *Client) PatchMultipart(ctx context.Context, addr string, writeMult
 	return client.doMultipart(ctx, http.MethodPatch, addr, writeMultipart)
 }
 
+func (client *Client) QueryMultipart(ctx context.Context, addr string, writeMultipart WriteMultipart) (*http.Response, error) {
+	return client.doMultipart(ctx, MethodQuery, addr, writeMultipart)
+}
+
 func (client *Client) doMultipart(ctx context.Context, method, addr string, writeMultipart WriteMultipart) (*http.Response, error) {
 	body, writer := io.Pipe()
 

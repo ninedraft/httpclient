@@ -71,6 +71,13 @@ func (client *Client) Patch(ctx context.Context, addr, bodyType string, body io.
 	return client.doBody(ctx, http.MethodPatch, addr, bodyType, body)
 }
 
+// https://www.ietf.org/archive/id/draft-ietf-httpbis-safe-method-w-body-02.html#name-introduction
+const MethodQuery = "QUERY"
+
+func (client *Client) Query(ctx context.Context, addr, bodyType string, body io.Reader) (*http.Response, error) {
+	return client.doBody(ctx, MethodQuery, addr, bodyType, body)
+}
+
 func (client *Client) doBody(ctx context.Context, method, addr, bodyType string, body io.Reader) (*http.Response, error) {
 	req, err := client.newRequest(ctx, method, addr, body)
 	if err != nil {

@@ -27,3 +27,9 @@ func (client *Client) PostForm(ctx context.Context, addr string, data url.Values
 
 	return client.Post(ctx, addr, "application/x-www-form-urlencoded", body)
 }
+
+func (client *Client) QueryForm(ctx context.Context, addr string, data url.Values) (*http.Response, error) {
+	body := strings.NewReader(data.Encode())
+
+	return client.Query(ctx, addr, "application/x-www-form-urlencoded", body)
+}
