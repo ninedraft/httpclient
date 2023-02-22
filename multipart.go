@@ -19,8 +19,6 @@ func MultipartFile(field, filename string, data io.Reader) WriteMultipart {
 			return errCreate
 		}
 
-		defer file.Close()
-
 		_, errCopy := io.Copy(file, data)
 		return errCopy
 	}
