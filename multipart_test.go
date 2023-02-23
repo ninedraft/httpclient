@@ -11,10 +11,10 @@ import (
 )
 
 var methodsMultiPart = map[string]methodMultipart{
-	http.MethodPost:        (*httpclient.Client).PostMultipart,
-	http.MethodPut:         (*httpclient.Client).PutMultipart,
-	http.MethodPatch:       (*httpclient.Client).PatchMultipart,
-	httpclient.MethodQuery: (*httpclient.Client).QueryMultipart,
+	http.MethodPost:  (*httpclient.Client).PostMultipart,
+	http.MethodPut:   (*httpclient.Client).PutMultipart,
+	http.MethodPatch: (*httpclient.Client).PatchMultipart,
+	MethodQuery:      (*httpclient.Client).QueryMultipart,
 }
 
 type methodMultipart = func(client *httpclient.Client, ctx context.Context, addr string, writeMultipart httpclient.WriteMultipart) (*http.Response, error)
@@ -84,7 +84,7 @@ func TestClient_MultipartFields(t *testing.T) {
 			ctx := context.Background()
 
 			resp, errCall := call(client, ctx, server.URL,
-				httpclient.FormFields(values))
+				httpclient.MultipartFields(values))
 
 			assertEqual(t, nil, errCall, "call error")
 			assertEqual(t, http.StatusOK, resp.StatusCode, "status code")

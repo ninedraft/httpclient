@@ -2,18 +2,39 @@ package httpclient
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"net/url"
 )
 
-type WriteMultipart func(w *multipart.Writer) error
+// WriteMultipart is a function that writes multipart data to the given writer.
+type WriteMultipart func(w MultipartWriter) error
 
+type MultipartWriter interface {
+	// CreateFormField calls CreatePart with a header using the
+	// given field name.
+	CreateFormField(name string) (io.Writer, error)
+
+	// CreateFormFile is a convenience wrapper around CreatePart. It creates
+	// a new form-data header with the provided field name and file name.
+	CreateFormFile(field, filename string) (io.Writer, error)
+
+	// WriteField calls CreateFormField and then writes the given value.
+	WriteField(fieldname, value string) error
+
+	// CreatePart creates a new multipart section with the provided
+	// header. The body of the part should be written to the returned
+	// Writer. After calling CreatePart, any previous part may no longer
+	// be written to.
+	CreatePart(header textproto.MIMEHeader) (io.Writer, error)
+}
+
+// MultiFile creates a WriteMultipart that writes a file to the given field.
 func MultipartFile(field, filename string, data io.Reader) WriteMultipart {
-	return func(w *multipart.Writer) error {
-		defer w.Close()
-
+	return func(w MultipartWriter) error {
 		file, errCreate := w.CreateFormFile(field, filename)
 		if errCreate != nil {
 			return errCreate
@@ -24,21 +45,17 @@ func MultipartFile(field, filename string, data io.Reader) WriteMultipart {
 	}
 }
 
-func FormFields(fields url.Values) WriteMultipart {
-	return func(w *multipart.Writer) error {
-		defer w.Close()
-
+// MultiFields creates a WriteMultipart that writes the given fields.
+func MultipartFields(fields url.Values) WriteMultipart {
+	return func(w MultipartWriter) error {
 		for name, value := range fields {
-			wr, errField := w.CreateFormField(name)
-			if errField != nil {
-				return errField
+			var v string
+			if len(value) > 0 {
+				v = value[0]
 			}
 
-			if len(value) > 0 {
-				_, errWrite := io.WriteString(wr, value[0])
-				if errWrite != nil {
-					return errWrite
-				}
+			if err := w.WriteField(name, v); err != nil {
+				return fmt.Errorf("write field %q: %w", name, err)
 			}
 		}
 
@@ -59,7 +76,7 @@ func (client *Client) PatchMultipart(ctx context.Context, addr string, writeMult
 }
 
 func (client *Client) QueryMultipart(ctx context.Context, addr string, writeMultipart WriteMultipart) (*http.Response, error) {
-	return client.doMultipart(ctx, MethodQuery, addr, writeMultipart)
+	return client.doMultipart(ctx, methodQuery, addr, writeMultipart)
 }
 
 func (client *Client) doMultipart(ctx context.Context, method, addr string, writeMultipart WriteMultipart) (*http.Response, error) {
@@ -77,11 +94,12 @@ func (client *Client) doMultipart(ctx context.Context, method, addr string, writ
 	go func() {
 		defer close(done)
 		defer writer.Close()
+		defer mwr.Close()
 
 		done <- writeMultipart(mwr)
 	}()
 
-	resp, errDo := client.Transport.Do(req)
+	resp, errDo := client.Doer.Do(req)
 	if errDo != nil {
 		return resp, errDo
 	}
