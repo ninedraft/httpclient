@@ -11,10 +11,10 @@ import (
 )
 
 var methodsJSON = map[string]methodJSON{
-	http.MethodPost:        (*httpclient.Client).PostJSON,
-	http.MethodPut:         (*httpclient.Client).PutJSON,
-	http.MethodPatch:       (*httpclient.Client).PatchJSON,
-	httpclient.MethodQuery: (*httpclient.Client).QueryJSON,
+	http.MethodPost:  (*httpclient.Client).PostJSON,
+	http.MethodPut:   (*httpclient.Client).PutJSON,
+	http.MethodPatch: (*httpclient.Client).PatchJSON,
+	MethodQuery:      (*httpclient.Client).QueryJSON,
 }
 
 type methodJSON = func(client *httpclient.Client, ctx context.Context, addr string, obj any) (*http.Response, error)

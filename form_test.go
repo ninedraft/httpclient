@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/ninedraft/httpclient"
-	"golang.org/x/exp/slices"
 )
 
 // special cases: GET, QUERY
@@ -101,23 +100,4 @@ func TestClient_FormQuery(t *testing.T) {
 	requireEqual(t, nil, errCall, "call error")
 	assertEqual(t, http.StatusOK, resp.StatusCode, "status code")
 	assertEqual(t, body, readString(t, resp.Body), "body")
-}
-
-func readString(t *testing.T, re io.Reader) string {
-	t.Helper()
-
-	body, errRead := io.ReadAll(re)
-	requireEqual(t, nil, errRead, "read body error")
-
-	return string(body)
-}
-
-func assertEqualSlices[E comparable](t *testing.T, want, got []E, msg string, args ...any) {
-	t.Helper()
-
-	if !slices.Equal(want, got) {
-		t.Errorf(msg, args...)
-		t.Errorf("expected: %+v", want)
-		t.Errorf("got:      %+v", got)
-	}
 }
