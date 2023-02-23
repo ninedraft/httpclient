@@ -13,6 +13,7 @@ import (
 // WriteMultipart is a function that writes multipart data to the given writer.
 type WriteMultipart func(w MultipartWriter) error
 
+// MultipartWriter is an interface that allows writing multipart data.
 type MultipartWriter interface {
 	// CreateFormField calls CreatePart with a header using the
 	// given field name.
@@ -45,6 +46,19 @@ func MultipartFile(field, filename string, data io.Reader) WriteMultipart {
 	}
 }
 
+// MultiFiles creates a WriteMultipart that applies the given multipart writers.
+func WriteMultiparts(writers ...WriteMultipart) WriteMultipart {
+	return func(w MultipartWriter) error {
+		for _, write := range writers {
+			if err := write(w); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
 // MultiFields creates a WriteMultipart that writes the given fields.
 func MultipartFields(fields url.Values) WriteMultipart {
 	return func(w MultipartWriter) error {
@@ -63,14 +77,17 @@ func MultipartFields(fields url.Values) WriteMultipart {
 	}
 }
 
+// PostMultipart sends a POST request with multipart data.
 func (client *Client) PostMultipart(ctx context.Context, addr string, writeMultipart WriteMultipart) (*http.Response, error) {
 	return client.doMultipart(ctx, http.MethodPost, addr, writeMultipart)
 }
 
+// PutMultipart sends a PUT request with multipart data.
 func (client *Client) PutMultipart(ctx context.Context, addr string, writeMultipart WriteMultipart) (*http.Response, error) {
 	return client.doMultipart(ctx, http.MethodPut, addr, writeMultipart)
 }
 
+// PatchMultipart sends a PATCH request with multipart data.
 func (client *Client) PatchMultipart(ctx context.Context, addr string, writeMultipart WriteMultipart) (*http.Response, error) {
 	return client.doMultipart(ctx, http.MethodPatch, addr, writeMultipart)
 }
