@@ -2,14 +2,30 @@ package httpclient_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 
 	"github.com/ninedraft/httpclient"
 )
 
+var client = httpclient.NewFrom(&http.Client{
+	Transport: &mockTransport{},
+})
+
+type mockTransport struct{}
+
+func (t *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp := httptest.NewRecorder()
+
+	resp.WriteHeader(http.StatusOK)
+	resp.WriteString(http.StatusText(http.StatusOK))
+
+	return resp.Result(), nil
+}
+
 func ExampleClient_Get() {
-	client := httpclient.New()
 	ctx := context.Background()
 
 	// GET request
@@ -21,7 +37,6 @@ func ExampleClient_Get() {
 }
 
 func ExampleClient_Post() {
-	client := httpclient.New()
 	ctx := context.Background()
 
 	// POST request
@@ -34,7 +49,6 @@ func ExampleClient_Post() {
 }
 
 func ExampleClient_PostJSON() {
-	client := httpclient.New()
 	ctx := context.Background()
 
 	// POST request
@@ -49,7 +63,6 @@ func ExampleClient_PostJSON() {
 }
 
 func ExampleClient_PostForm() {
-	client := httpclient.New()
 	ctx := context.Background()
 
 	// POST request
