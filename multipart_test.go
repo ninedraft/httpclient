@@ -95,3 +95,52 @@ func TestClient_MultipartFields(t *testing.T) {
 		tc(method, call)
 	}
 }
+
+func TestClient_WriteMultiparts(t *testing.T) {
+	var values = url.Values{
+		"field": {"value"},
+	}
+	const fileField, filename, fileValue = "file", "filename", "value"
+
+	tc := func(method string, call methodMultipart) {
+		t.Run(method, func(t *testing.T) {
+			t.Parallel()
+
+			server := testServer(t, func(w http.ResponseWriter, r *http.Request) {
+				errParse := r.ParseMultipartForm(1 << 20)
+				assertEqual(t, nil, errParse, "parse multipart form error")
+
+				form := r.MultipartForm.Value
+				for field, value := range values {
+					assertEqualSlices(t, value, form[field], "field value")
+				}
+
+				file, errFile := r.MultipartForm.File[fileField][0].Open()
+				assertEqual(t, nil, errFile, "file open error")
+				defer file.Close()
+
+				gotFile := readString(t, file)
+				assertEqual(t, fileValue, gotFile, "file value")
+
+				w.WriteHeader(http.StatusOK)
+			})
+			defer server.Assert(t)
+
+			client := httpclient.NewFrom(server.Client())
+			ctx := context.Background()
+
+			resp, errCall := call(client, ctx, server.URL,
+				httpclient.WriteMultiparts(
+					httpclient.MultipartFields(values),
+					httpclient.MultipartFile(fileField, filename, strings.NewReader(fileValue)),
+				))
+
+			assertEqual(t, nil, errCall, "call error")
+			assertEqual(t, http.StatusOK, resp.StatusCode, "status code")
+		})
+	}
+
+	for method, call := range methodsMultiPart {
+		tc(method, call)
+	}
+}
