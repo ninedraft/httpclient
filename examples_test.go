@@ -80,23 +80,12 @@ func ExampleClient_PostForm() {
 
 	// POST request
 	resp, err = client.PostMultipart(ctx, "https://httpbin.org/post",
-		func(w httpclient.MultipartWriter) error {
-			// write form fields
-			err := w.WriteField("foo", "bar")
-			if err != nil {
-				return err
-			}
-			// write file
-			fw, err := w.CreateFormFile("file", "file.txt")
-			if err != nil {
-				return err
-			}
-			_, err = fw.Write([]byte("file content"))
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+		httpclient.WriteMultiparts(
+			httpclient.MultipartFields(url.Values{
+				"foo": []string{"bar"},
+			}),
+			httpclient.MultipartFile("file", "file.txt", strings.NewReader("file content")),
+		))
 	if err != nil {
 		panic(err)
 	}
