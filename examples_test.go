@@ -8,7 +8,7 @@ import (
 	"github.com/ninedraft/httpclient"
 )
 
-func ExampleClient() {
+func ExampleClient_Get() {
 	client := httpclient.New()
 	ctx := context.Background()
 
@@ -18,9 +18,14 @@ func ExampleClient() {
 		panic(err)
 	}
 	defer resp.Body.Close()
+}
+
+func ExampleClient_Post() {
+	client := httpclient.New()
+	ctx := context.Background()
 
 	// POST request
-	resp, err = client.Post(ctx, "https://httpbin.org/post", "application/json",
+	resp, err := client.Post(ctx, "https://httpbin.org/post", "application/json",
 		strings.NewReader(`{"foo": "bar"}`))
 	if err != nil {
 		panic(err)
@@ -28,7 +33,7 @@ func ExampleClient() {
 	defer resp.Body.Close()
 }
 
-func ExampleClient_JSON() {
+func ExampleClient_PostJSON() {
 	client := httpclient.New()
 	ctx := context.Background()
 
@@ -43,7 +48,7 @@ func ExampleClient_JSON() {
 	defer resp.Body.Close()
 }
 
-func ExampleClient_Form() {
+func ExampleClient_PostForm() {
 	client := httpclient.New()
 	ctx := context.Background()
 
@@ -56,42 +61,25 @@ func ExampleClient_Form() {
 		panic(err)
 	}
 	defer resp.Body.Close()
-}
-
-func ExampleClient_MultipartFields() {
-	client := httpclient.New()
-	ctx := context.Background()
 
 	// POST request
-	resp, err := client.PostMultipart(ctx, "https://httpbin.org/post",
-		httpclient.MultipartFields(url.Values{
-			"foo": []string{"bar"},
-		}))
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-}
-
-func ExampleClient_MultipartFile() {
-	client := httpclient.New()
-	ctx := context.Background()
-
-	// POST request
-	resp, err := client.PostMultipart(ctx, "https://httpbin.org/post",
+	resp, err = client.PostMultipart(ctx, "https://httpbin.org/post",
 		httpclient.MultipartFile("file", "file.txt", strings.NewReader("file content")))
 	if err != nil {
 		panic(err)
 	}
 	defer resp.Body.Close()
-}
-
-func ExampleClient_Multipart() {
-	client := httpclient.New()
-	ctx := context.Background()
 
 	// POST request
-	resp, err := client.PostMultipart(ctx, "https://httpbin.org/post",
+	resp, err = client.PostMultipart(ctx, "https://httpbin.org/post",
+		httpclient.MultipartFile("file", "file.txt", strings.NewReader("file content")))
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	// POST request
+	resp, err = client.PostMultipart(ctx, "https://httpbin.org/post",
 		func(w httpclient.MultipartWriter) error {
 			// write form fields
 			err := w.WriteField("foo", "bar")
