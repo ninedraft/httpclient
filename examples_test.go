@@ -2,6 +2,7 @@ package httpclient_test
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -10,26 +11,28 @@ import (
 	"github.com/ninedraft/httpclient"
 )
 
-var client = httpclient.NewFrom(&http.Client{
-	Transport: &mockTransport{},
-})
+var exampleService = "http://localhost:8080"
 
-type mockTransport struct{}
+func init() {
+	const status = http.StatusOK
+	var response = []byte(http.StatusText(status))
 
-func (t *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	resp := httptest.NewRecorder()
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.Copy(io.Discard, r.Body)
+		w.WriteHeader(status)
+		w.Write(response)
+	}
 
-	resp.WriteHeader(http.StatusOK)
-	resp.WriteString(http.StatusText(http.StatusOK))
-
-	return resp.Result(), nil
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	exampleService = server.URL
 }
 
 func ExampleClient_Get() {
 	ctx := context.Background()
+	client := httpclient.New()
 
 	// GET request
-	resp, err := client.Get(ctx, "https://httpbin.org/get")
+	resp, err := client.Get(ctx, exampleService)
 	if err != nil {
 		panic(err)
 	}
@@ -38,9 +41,10 @@ func ExampleClient_Get() {
 
 func ExampleClient_Post() {
 	ctx := context.Background()
+	client := httpclient.New()
 
 	// POST request
-	resp, err := client.Post(ctx, "https://httpbin.org/post", "application/json",
+	resp, err := client.Post(ctx, exampleService, "application/json",
 		strings.NewReader(`{"foo": "bar"}`))
 	if err != nil {
 		panic(err)
@@ -50,9 +54,10 @@ func ExampleClient_Post() {
 
 func ExampleClient_PostJSON() {
 	ctx := context.Background()
+	client := httpclient.New()
 
 	// POST request
-	resp, err := client.PostJSON(ctx, "https://httpbin.org/post",
+	resp, err := client.PostJSON(ctx, exampleService,
 		map[string]string{
 			"foo": "bar",
 		})
@@ -64,9 +69,10 @@ func ExampleClient_PostJSON() {
 
 func ExampleClient_PostForm() {
 	ctx := context.Background()
+	client := httpclient.New()
 
 	// POST request
-	resp, err := client.PostForm(ctx, "https://httpbin.org/post",
+	resp, err := client.PostForm(ctx, exampleService,
 		url.Values{
 			"foo": []string{"bar"},
 		})
@@ -76,7 +82,7 @@ func ExampleClient_PostForm() {
 	defer resp.Body.Close()
 
 	// POST request
-	resp, err = client.PostMultipart(ctx, "https://httpbin.org/post",
+	resp, err = client.PostMultipart(ctx, exampleService,
 		httpclient.MultipartFile("file", "file.txt", strings.NewReader("file content")))
 	if err != nil {
 		panic(err)
@@ -84,7 +90,7 @@ func ExampleClient_PostForm() {
 	defer resp.Body.Close()
 
 	// POST request
-	resp, err = client.PostMultipart(ctx, "https://httpbin.org/post",
+	resp, err = client.PostMultipart(ctx, exampleService,
 		httpclient.MultipartFile("file", "file.txt", strings.NewReader("file content")))
 	if err != nil {
 		panic(err)
@@ -92,7 +98,7 @@ func ExampleClient_PostForm() {
 	defer resp.Body.Close()
 
 	// POST request
-	resp, err = client.PostMultipart(ctx, "https://httpbin.org/post",
+	resp, err = client.PostMultipart(ctx, exampleService,
 		httpclient.WriteMultiparts(
 			httpclient.MultipartFields(url.Values{
 				"foo": []string{"bar"},
