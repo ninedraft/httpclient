@@ -11,9 +11,7 @@ import (
 	"github.com/ninedraft/httpclient"
 )
 
-var exampleService = "http://localhost:8080"
-
-func init() {
+var exampleService = func() string {
 	const status = http.StatusOK
 	var response = []byte(http.StatusText(status))
 
@@ -24,8 +22,8 @@ func init() {
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(handler))
-	exampleService = server.URL
-}
+	return server.URL
+}()
 
 func ExampleClient_Get() {
 	ctx := context.Background()
