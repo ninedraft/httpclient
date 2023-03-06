@@ -11,26 +11,27 @@ import (
 	"github.com/ninedraft/httpclient"
 )
 
-var exampleService = func() string {
-	const status = http.StatusOK
-	var response = []byte(http.StatusText(status))
+type exampleRoundTripper struct{}
 
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.Copy(io.Discard, r.Body)
-		w.WriteHeader(status)
-		w.Write(response)
-	}
+func (exampleRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	_, _ = io.Copy(io.Discard, req.Body)
 
-	server := httptest.NewServer(http.HandlerFunc(handler))
-	return server.URL
-}()
+	resp := httptest.NewRecorder()
+
+	resp.WriteHeader(http.StatusOK)
+	resp.WriteString("OK")
+
+	return resp.Result(), nil
+}
 
 func ExampleClient_Get() {
 	ctx := context.Background()
-	client := httpclient.New()
+	client := httpclient.NewFrom(&http.Client{
+		Transport: exampleRoundTripper{},
+	})
 
 	// GET request
-	resp, err := client.Get(ctx, exampleService)
+	resp, err := client.Get(ctx, "https://example.com")
 	if err != nil {
 		panic(err)
 	}
@@ -39,10 +40,12 @@ func ExampleClient_Get() {
 
 func ExampleClient_Post() {
 	ctx := context.Background()
-	client := httpclient.New()
+	client := httpclient.NewFrom(&http.Client{
+		Transport: exampleRoundTripper{},
+	})
 
 	// POST request
-	resp, err := client.Post(ctx, exampleService, "application/json",
+	resp, err := client.Post(ctx, "https://example.com", "application/json",
 		strings.NewReader(`{"foo": "bar"}`))
 	if err != nil {
 		panic(err)
@@ -52,10 +55,12 @@ func ExampleClient_Post() {
 
 func ExampleClient_PostJSON() {
 	ctx := context.Background()
-	client := httpclient.New()
+	client := httpclient.NewFrom(&http.Client{
+		Transport: exampleRoundTripper{},
+	})
 
 	// POST request
-	resp, err := client.PostJSON(ctx, exampleService,
+	resp, err := client.PostJSON(ctx, "https://example.com",
 		map[string]string{
 			"foo": "bar",
 		})
@@ -67,10 +72,12 @@ func ExampleClient_PostJSON() {
 
 func ExampleClient_PostForm() {
 	ctx := context.Background()
-	client := httpclient.New()
+	client := httpclient.NewFrom(&http.Client{
+		Transport: exampleRoundTripper{},
+	})
 
 	// POST request
-	resp, err := client.PostForm(ctx, exampleService,
+	resp, err := client.PostForm(ctx, "https://example.com",
 		url.Values{
 			"foo": []string{"bar"},
 		})
@@ -80,7 +87,7 @@ func ExampleClient_PostForm() {
 	defer resp.Body.Close()
 
 	// POST request
-	resp, err = client.PostMultipart(ctx, exampleService,
+	resp, err = client.PostMultipart(ctx, "https://example.com",
 		httpclient.MultipartFile("file", "file.txt", strings.NewReader("file content")))
 	if err != nil {
 		panic(err)
@@ -88,7 +95,7 @@ func ExampleClient_PostForm() {
 	defer resp.Body.Close()
 
 	// POST request
-	resp, err = client.PostMultipart(ctx, exampleService,
+	resp, err = client.PostMultipart(ctx, "https://example.com",
 		httpclient.MultipartFile("file", "file.txt", strings.NewReader("file content")))
 	if err != nil {
 		panic(err)
@@ -96,7 +103,7 @@ func ExampleClient_PostForm() {
 	defer resp.Body.Close()
 
 	// POST request
-	resp, err = client.PostMultipart(ctx, exampleService,
+	resp, err = client.PostMultipart(ctx, "https://example.com",
 		httpclient.WriteMultiparts(
 			httpclient.MultipartFields(url.Values{
 				"foo": []string{"bar"},
